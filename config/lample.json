@@ -1,0 +1,26 @@
+{
+    "dataset_path": "datasets/conll2003_bioes",
+    "save_model_path": "tmp/crf_result",
+    "seed": 20,
+    "model": {
+        "type": "crf",
+        "embedding": {
+            "word_embedding": {
+                "type": "Glove",
+                "dim": 100
+            },
+            "char_embedding": {
+                "hidden_dim": 50,
+                "dim": 25
+            },
+            "hidden_dim": 200
+        },
+        "dropout_rate": 0.5
+    },
+    "train": {
+        "learning_rate": 0.01,
+        "epochs": 50,
+        "batch_size": 10
+    },
+    "device": "GPU"
+}

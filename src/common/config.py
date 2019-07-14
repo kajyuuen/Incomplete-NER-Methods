@@ -1,0 +1,3 @@
+PAD_TAG = "<pad>"
+UNK_TAG = "<unk>"
+UNLABELED_TAG = "NOANNOTATION"

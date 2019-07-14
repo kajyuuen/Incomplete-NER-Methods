@@ -1,0 +1,11 @@
+.vscode
+.vector_cache
+conll2003*
+__pycache__
+*.log
+tmp
+datasets
+nohup.out
+config/*
+!config/fuzzy_lample.json
+!config/lample.json
