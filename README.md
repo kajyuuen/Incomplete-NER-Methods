@@ -1,6 +1,6 @@
-# BiLSTM-FuzzyCRF in PyTorch
+# Fuzzy-LSTM-CRF in PyTorch
 
-Implementation of BiLSTM-Fuzzy-CRF and BiLSTM-CRF for sequence labeling.
+Implementation of Fuzzy-LSTM-CRF and LSTM-CRF for sequence labeling.
 
 ## Usage
 
@@ -41,3 +41,5 @@ $ python main.py config/fuzzy_lample.json
 - https://github.com/threelittlemonkeys/lstm-crf-pytorch
 - https://github.com/kolloldas/torchnlp/blob/master/torchnlp
 - https://github.com/allanj/pytorch_lstmcrf
+- https://github.com/shangjingbo1226/AutoNER
+
