@@ -163,16 +163,12 @@ class BiLSTM_Fuzzy_CRF(nn.Module):
                      alpha * (1 - mask[i]).view(batch_size, 1))
 
         # Add end transition score
-        # TODO: Acceleration
         last_tag_indexes = mask.sum(0).long() - 1
-        end_transitions = torch.zeros([batch_size, num_tags]).to(self.device)
-        for idx, last_tag_index in enumerate(last_tag_indexes):
-            end_transition = self.end_transitions.clone()
-            end_transition[(possible_tags[last_tag_index][idx] == 0)] = -10000000
-            end_transitions[idx] = end_transition
+        end_transitions = self.end_transitions.expand(batch_size, num_tags) \
+                            * possible_tags.transpose(0, 1).view(sequence_length * batch_size, num_tags)[last_tag_indexes + torch.arange(batch_size).to(self.device) * sequence_length]
+        end_transitions[(end_transitions == 0)] = -10000000
         stops = alpha + end_transitions
         score = log_sum_exp(stops)
-
         return score
 
     def _batch2feats(self, batch):
