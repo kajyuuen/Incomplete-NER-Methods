@@ -37,13 +37,16 @@ class LabelDeleter:
             entities.append(sentence_entities)
         self.entities = entities
 
-    def delete_label(self, p=0):
+    def delete_label(self, p = 0, other_delete_all = False):
         entity_count = sum(self.e_type_counter.values())
         delete_entity_nums = int(entity_count * p)
         delete_dict = {}
         delete_tag_cnt = 0
         for e_type, num in self.e_type_counter.items():
-            e_type_delete_nums = int(num/entity_count*delete_entity_nums)
+            if other_delete_all and e_type == "O":
+                e_type_delete_nums = num
+            else:
+                e_type_delete_nums = int(num/entity_count*delete_entity_nums)
             delete_dict[e_type] = np.random.choice(num, e_type_delete_nums, replace=False)
             delete_tag_cnt += e_type_delete_nums
             print("TYPE:{:<15}before {},\tafter {}".format(e_type + ",", num, num - e_type_delete_nums))
