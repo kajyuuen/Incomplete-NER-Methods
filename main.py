@@ -11,6 +11,7 @@ from seqeval.metrics import classification_report
 from src.data.conll_dataset import Conll2003Dataset
 from src.modules.bilstm_crf import BiLSTM_CRF
 from src.modules.bilstm_fuzzycrf import BiLSTM_Fuzzy_CRF
+from src.modules.bilstm_hard_crf import BiLSTM_Hard_CRF
 from src.common.trainer import Trainer
 from src.common.convert import convert
 
@@ -101,6 +102,19 @@ def main(file_name):
                         device = device)
     elif MODEL_TYPE == "fuzzy_crf":
         model = BiLSTM_Fuzzy_CRF(num_tags,
+                        label2idx,
+                        idx2labels,
+                        word_embedding,
+                        WORD_EMBEDDING_DIM,
+                        HIDDEN_DIM,
+                        CHAR_EMBEDDING_DIM,
+                        CHAR_HIDDEN_DIM,
+                        char2idx,
+                        idx2char,
+                        dropout_rate = DROPOUT_RATE,
+                        device = device)
+    elif MODEL_TYPE == "hard_crf":
+        model = BiLSTM_Hard_CRF(num_tags,
                         label2idx,
                         idx2labels,
                         word_embedding,
