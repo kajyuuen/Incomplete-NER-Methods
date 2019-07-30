@@ -136,10 +136,12 @@ def main(file_name):
     test_iter = dataset.test_batch
 
     if MODEL_TYPE == "hard_crf":
+        SUB_EPOCHS = setting_json["train"]["sub_num_epochs"]
         trainer = HardTrainer(model,
                         train_iter,
                         valid_iter=valid_iter,
                         test_iter=test_iter,
+                        sub_num_epochs=SUB_EPOCHS,
                         label_dict=label2idx,
                         learning_rate=LEAENING_RATE,
                         clipping=CLIPPING,
