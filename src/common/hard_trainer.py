@@ -126,6 +126,8 @@ class HardTrainer():
             with open(save_path + "/best_epoch.txt", "w") as f:
                 f.write(str(best_iteration))
 
+            # TODO: "/k_{}/iteration_{}/result.txt"　を作る
+
             # Early stopping
             if early_stopping is None:
                 continue
@@ -169,10 +171,30 @@ class HardTrainer():
                 model = copy.deepcopy(self.init_model)
                 self._simple_train(model, labeled_train_iter, self.valid_iter, self.sub_num_epochs, "Train", self.save_path + "/k_{}/iteration_{}".format(k, epoch_ind+1), early_stopping=5)
 
+            if True:
+                # Final Train
+                model = copy.deepcopy(self.init_model)
+                loss, valid_loss = self._simple_train(model, self.train_iter, self.valid_iter, self.sub_num_epochs, "Final Train", self.save_path + "/final", early_stopping=5)
+                loss_text = "Train: {}, Valid: {}".format(loss, valid_loss)
+
+                # Test
+                model.eval()
+                if self.test_flag:
+                    y_true, y_pred = [], []
+                    for batch in self.test_iter:
+                        predict_tags = model(batch)
+                        _, _, _, label_seq_tensor = batch
+                        y_true.extend(convert(label_seq_tensor.tolist(), self.label_dict))
+                        y_pred.extend(convert(predict_tags, self.label_dict))
+                    with open(self.save_path + "/result.txt", "a") as f:
+                        f.write("\nepoch: {}, {}, F1: {}\n".format(epoch_ind+1, loss_text, f1_score(y_true, y_pred)))
+                        f.write(classification_report(y_true, y_pred, digits=5))
+
         # Final Train
         model = copy.deepcopy(self.init_model)
         loss, valid_loss = self._simple_train(model, self.train_iter, self.valid_iter, self.sub_num_epochs, "Final Train", self.save_path + "/final", early_stopping=5)
         loss_text = "Train: {}, Valid: {}".format(loss, valid_loss)
+
         # Test
         model.eval()
         if self.test_flag:

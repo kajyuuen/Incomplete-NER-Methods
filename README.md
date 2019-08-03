@@ -20,6 +20,12 @@ Unlabeled token's tag is `NOANNOTATION`.
 $ python delete_annotation.py conll2003_bioes/eng.train tmp.train --entity_keep_ratio 0.4
 ```
 
+## Create Dictionary
+
+```
+$ python delete_annotation.py conll2003_bioes/eng.testb testb.dict
+```
+
 ## Train and Predict
 
 ### BiLSTM-CRF
