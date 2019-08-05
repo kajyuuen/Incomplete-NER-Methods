@@ -77,7 +77,7 @@ class Conll2003Dataset:
         label2idx, idx2labels = {}, []
         label2idx[PAD_TAG] = 0
         idx2labels.append(PAD_TAG)
-        for instance in self.train_instances:
+        for instance in self.train_instances + self.valid_instances:
             for label in instance.labels:
                 if (label not in label2idx) and label != UNLABELED_TAG:
                     idx2labels.append(label)
@@ -180,4 +180,4 @@ class Conll2003Dataset:
         word_seq_len = word_seq_len.to(self.device)
         char_seq_len = char_seq_len.to(self.device)
 
-        return word_seq_tensor, char_seq_tensor, char_seq_len, label_seq_tensor
+        return [word_seq_tensor, char_seq_tensor, char_seq_len, label_seq_tensor]

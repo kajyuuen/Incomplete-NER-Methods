@@ -123,12 +123,13 @@ class BiLSTM_Hard_CRF(nn.Module):
         """
         pass
 
-    def _score_sentence(self, feats, tags, mask):
+    def _score_sentence(self, feats, tags, mask, init_train):
         """
         Parameters:
             feats: (batch_size, sequence_length, num_tags)
             tags:  (batch_size, sequence_length)
             mask:  Show padding tags. 0 don't calculate score. (batch_size, sequence_length)
+            init_train: If this params is True, UNLABELED is treated O tag.
         Returns:
             scores: (batch_size)
         """
@@ -140,7 +141,8 @@ class BiLSTM_Hard_CRF(nn.Module):
         mask = mask.float().transpose(0, 1).contiguous()
 
         # NOTE: NOANNOTATION -> O
-        tags[(tags == self.UNLABELED_INDEX)] = self.label2idx["O"]
+        if init_train:
+            tags[(tags == self.UNLABELED_INDEX)] = self.label2idx["O"]
         
         # Start transition score and first emission
         score = self.start_transitions.index_select(0, tags[0])
@@ -197,21 +199,74 @@ class BiLSTM_Hard_CRF(nn.Module):
 
         return feats, tags, mask
 
-    def neg_log_likelihood(self, batch):
+    def neg_log_likelihood(self, batch, init_train=False):
         feats, tags, mask = self._batch2feats(batch)
-        gold_score = self._score_sentence(feats, tags, mask)
+        gold_score = self._score_sentence(feats, tags, mask, init_train)
         forward_score = self._forward_alg(feats, mask)
         score = forward_score - gold_score
 
-        return torch.sum(forward_score - gold_score)
+        return torch.sum(score)
+
+    def restricted_forward(self, batch):
+        feats, tags, mask = self._batch2feats(batch)
+        predict_tags = self._restricted_viterbi_tags(feats, tags, mask, is_padding=True)
+
+        return predict_tags
 
     def forward(self, batch):
         feats, tags, mask = self._batch2feats(batch)
-        predict_tags = self._restricted_viterbi_tags(feats, tags, mask)
+        predict_tags = self._viterbi_tags(feats, mask)
         
         return predict_tags
 
-    def _restricted_viterbi_tags(self, feats, tags, mask):
+    def _viterbi_tags(self, feats, mask):
+        """
+        Parameters:
+            feats: (batch_size, sequence_length, num_tags)
+            mask:  Show padding tags. 0 don't calculate score. (batch_size, sequence_length)
+        Returns:
+            tags: (batch_size)
+        """
+        batch_size, sequence_length, _ = feats.shape
+
+        feats = feats.transpose(0, 1).contiguous()
+        mask = mask.transpose(0, 1).contiguous()
+
+        # Start transition and first emission
+        score = self.start_transitions + feats[0]
+        history = []
+
+        for i in range(1, sequence_length):
+            broadcast_score = score.unsqueeze(2)
+            broadcast_feats = feats[i].unsqueeze(1)
+
+            next_score = broadcast_score + self.transitions + broadcast_feats
+            next_score, indices = next_score.max(dim=1)
+
+            score = torch.where(mask[i].unsqueeze(1), next_score, score)
+            history.append(indices)
+
+        # Add end transition score
+        score += self.end_transitions
+
+        # Compute the best path for each sample
+        # seq_ends = mask.long().sum(dim=0) - 1
+        best_tags_list = []
+
+        for idx in range(batch_size):
+            _, best_last_tag = score[idx].max(dim=0)
+            best_tags = [best_last_tag.item()]
+
+            for hist in reversed(history):
+                best_last_tag = hist[idx][best_tags[-1]]
+                best_tags.append(best_last_tag.item())
+
+            best_tags.reverse()
+            best_tags_list.append(best_tags)
+
+        return best_tags_list
+
+    def _restricted_viterbi_tags(self, feats, tags, mask, is_padding=False):
         """
         Parameters:
             feats: (batch_size, sequence_length, num_tags)
@@ -222,7 +277,6 @@ class BiLSTM_Hard_CRF(nn.Module):
         batch_size, sequence_length, num_tags = feats.shape
         feats = feats.transpose(0, 1).contiguous()
         mask = mask.transpose(0, 1).contiguous()
-
         possible_tags = possible_tag_masks(self.num_tags, tags, self.UNLABELED_INDEX, self.device).float().transpose(0, 1) # (sequence_length, batch_size, num_tags)
 
         # Start transition and first emission
@@ -260,6 +314,7 @@ class BiLSTM_Hard_CRF(nn.Module):
 
         # Compute the best path for each sample
         seq_ends = mask.long().sum(dim=0) - 1
+        max_len = int(seq_ends[0])
         best_tags_list = []
 
         for idx in range(batch_size):
@@ -271,6 +326,8 @@ class BiLSTM_Hard_CRF(nn.Module):
                 best_tags.append(best_last_tag.item())
 
             best_tags.reverse()
+            if is_padding:
+                best_tags.extend([self.PAD_INDEX] * ( max_len - len(best_tags) + 1) )
             best_tags_list.append(best_tags)
 
         return best_tags_list
