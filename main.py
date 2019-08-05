@@ -77,10 +77,16 @@ def main(file_name):
         torch.cuda.manual_seed(SEED)
         torch.cuda.manual_seed_all(SEED)
 
+    if MODEL_TYPE == "simple":
+        unlabel_to_other = True
+    else:
+        unlabel_to_other = False
+
     dataset = Conll2003Dataset(BATCH_SIZE,
                                DATASET_PATH,
                                word_emb_dim = WORD_EMBEDDING_DIM,
                                pretrain_type = WORD_EMBEDDING_TYPE,
+                               unlabel_to_other = unlabel_to_other,
                                device = device)
 
     num_tags = dataset.num_tags
@@ -88,7 +94,7 @@ def main(file_name):
     char2idx, idx2char = dataset.char2idx, dataset.idx2char
     word_embedding = dataset.word_embedding
 
-    if MODEL_TYPE == "crf":
+    if MODEL_TYPE == "crf" or MODEL_TYPE == "simple":
         model = BiLSTM_CRF(num_tags,
                         label2idx,
                         idx2labels,

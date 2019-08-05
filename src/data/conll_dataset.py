@@ -14,13 +14,14 @@ class Conll2003Dataset:
                  word_emb_dim,
                  test_batch_size = None,
                  pretrain_type = None,
+                 unlabel_to_other = False,
                  device = "cpu"):
         self.reader = Conll2003Reader()
         self.device = device
         self.batch_size = batch_size
-        self.train_instances = self.reader.load_text(dataset_path + "/eng.train")
-        self.valid_instances = self.reader.load_text(dataset_path + "/eng.testa")
-        self.test_instances = self.reader.load_text(dataset_path + "/eng.testb")
+        self.train_instances = self.reader.load_text(dataset_path + "/eng.train", unlabel_to_other=unlabel_to_other)
+        self.valid_instances = self.reader.load_text(dataset_path + "/eng.testa", unlabel_to_other=unlabel_to_other)
+        self.test_instances = self.reader.load_text(dataset_path + "/eng.testb", unlabel_to_other=unlabel_to_other)
         self.label2idx, self.idx2labels = self._build_label_idx()
         self.num_tags = len(self.idx2labels)
         self.word2idx, self.idx2word, self.char2idx, self.idx2char = self._build_word_idx()

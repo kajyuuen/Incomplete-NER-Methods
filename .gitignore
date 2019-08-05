@@ -6,6 +6,10 @@ __pycache__
 tmp
 datasets
 nohup.out
-config/*
-!config/fuzzy_lample.json
+*.json
+!config/fuzzy.json
+!config/hard.json
 !config/lample.json
+!config/dictionary/fuzzy.json
+!config/dictionary/hard.json
+!config/dictionary/simple.json
