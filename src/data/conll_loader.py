@@ -11,7 +11,7 @@ class Conll2003Reader:
     def __init__(self):
         self.vocab = set()
 
-    def load_text(self, file):
+    def load_text(self, file, to_lower=False):
         instances = []
         with open(file, 'r') as f:
             words = []
@@ -25,6 +25,8 @@ class Conll2003Reader:
                     continue
                 rows = line.split(" ")
                 word = rows[0]
+                if to_lower:
+                    word = word.lower()
                 label = rows[-1]
                 words.append(word)
                 labels.append(label)

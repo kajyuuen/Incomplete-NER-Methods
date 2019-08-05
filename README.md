@@ -23,7 +23,15 @@ $ python delete_annotation.py conll2003_bioes/eng.train tmp.train --entity_keep_
 ## Create Dictionary
 
 ```
-$ python delete_annotation.py conll2003_bioes/eng.testb testb.dict
+$ python dict_create.py datasets/dict_conll2003_bioes/eng.testa datasets/dict_conll2003_bioes/testa.dic
+```
+
+## Annotation using Dictionary
+
+アノテーション先のコーパスについているアノテーションは無いものとして扱われ，辞書にない表現は全て`NOANNOTATION`として扱われます
+
+```
+$ python dict_labeling.py datasets/dict_conll2003_bioes/testa.dic datasets/dict_conll2003_bioes/eng.train
 ```
 
 ## Train and Predict
