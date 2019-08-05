@@ -13,6 +13,7 @@ from src.modules.bilstm_crf import BiLSTM_CRF
 from src.modules.bilstm_fuzzycrf import BiLSTM_Fuzzy_CRF
 from src.modules.bilstm_hard_crf import BiLSTM_Hard_CRF
 from src.common.trainer import Trainer
+from src.common.hard_trainer import HardTrainer
 from src.common.convert import convert
 
 def main(file_name):
@@ -134,16 +135,31 @@ def main(file_name):
     valid_iter = dataset.valid_batch
     test_iter = dataset.test_batch
 
-    trainer = Trainer(model,
-                      train_iter,
-                      valid_iter=valid_iter,
-                      test_iter=test_iter,
-                      label_dict=label2idx,
-                      learning_rate=LEAENING_RATE,
-                      clipping=CLIPPING,
-                      save_path=SAVE_MODEL_PATH,
-                      train_only=TRAIN_ONLY,
-                      force_save=True)
+    if MODEL_TYPE == "hard_crf":
+        SUB_EPOCHS = setting_json["train"]["sub_num_epochs"]
+        trainer = HardTrainer(model,
+                        train_iter,
+                        valid_iter=valid_iter,
+                        test_iter=test_iter,
+                        sub_num_epochs=SUB_EPOCHS,
+                        label_dict=label2idx,
+                        learning_rate=LEAENING_RATE,
+                        clipping=CLIPPING,
+                        save_path=SAVE_MODEL_PATH,
+                        train_only=TRAIN_ONLY,
+                        force_save=True,
+                        device = device)
+    else:
+        trainer = Trainer(model,
+                        train_iter,
+                        valid_iter=valid_iter,
+                        test_iter=test_iter,
+                        label_dict=label2idx,
+                        learning_rate=LEAENING_RATE,
+                        clipping=CLIPPING,
+                        save_path=SAVE_MODEL_PATH,
+                        train_only=TRAIN_ONLY,
+                        force_save=True)
     trainer.train(EPOCHS)
 
 if __name__ == "__main__":
