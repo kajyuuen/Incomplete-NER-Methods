@@ -61,6 +61,16 @@ class HardTrainer():
             dataset_iter[i][3] = torch.LongTensor(predict_tags).to(self.device)
         return dataset_iter
 
+    def _simple_f1_score(self, model, iter):
+        model.eval()
+        y_true, y_pred = [], []
+        for batch in iter:
+            predict_tags = model(batch)
+            _, _, _, label_seq_tensor = batch
+            y_true.extend(convert(label_seq_tensor.tolist(), self.label_dict))
+            y_pred.extend(convert(predict_tags, self.label_dict))
+        return f1_score(y_true, y_pred)
+
     def _simple_valid(self, model, valid_iter):
         model.eval()
 
@@ -81,8 +91,8 @@ class HardTrainer():
         return valid_loss
 
     def _simple_train(self, model, dataset_iter, valid_iter, num_epochs, description, save_path, early_stopping=None, init_train=False):
-        best_iteration, best_loss = 0, 10e8
-        optimizer = optim.SGD(model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+        best_iteration, best_f1 = 0, 0
+        optimizer = optim.Adam(model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
 
         for ind in range(num_epochs):
             model.train()
@@ -95,13 +105,14 @@ class HardTrainer():
                 optimizer.zero_grad()
                 loss = model.neg_log_likelihood(batch, init_train=init_train)
                 loss.backward()
+
+                if self.clipping is not None:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), self.clipping)j
+
                 optimizer.step()
 
                 epoch_loss += loss.item()
                 count += 1
-
-                if self.clipping is not None:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), self.clipping) 
 
                 loss = epoch_loss/count
 
@@ -117,16 +128,19 @@ class HardTrainer():
                 continue
 
             # Valid
-            valid_loss = self._simple_valid(model, valid_iter)
+            valid_f1 = self._simple_f1_score(model, valid_iter)
 
-            if valid_loss < best_loss:
-                best_loss = valid_loss
+            if valid_f1 >= best_f1:
+                best_f1 = valid_f1
                 best_iteration = ind+1
 
             with open(save_path + "/best_epoch.txt", "w") as f:
                 f.write(str(best_iteration))
 
-            # TODO: "/k_{}/iteration_{}/result.txt"　を作る
+            valid_loss = self._simple_valid(model, valid_iter)
+
+            with open(save_path + "/valid_f1_score.txt", "a") as f:
+                f.write("[{}] valid loss: {}, valid f1: {}\n".format(ind+1, valid_loss, valid_f1))
 
             # Early stopping
             if early_stopping is None:

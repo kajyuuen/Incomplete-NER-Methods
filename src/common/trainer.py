@@ -62,13 +62,14 @@ class Trainer():
                 self.optimizer.zero_grad()
                 loss = self.model.neg_log_likelihood(batch)
                 loss.backward()
+
+                if self.clipping is not None:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clipping) 
+
                 self.optimizer.step()
 
                 epoch_train_loss += loss.item()
                 train_count += 1
-
-                if self.clipping is not None:
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clipping) 
 
                 train_loss = epoch_train_loss/train_count
 

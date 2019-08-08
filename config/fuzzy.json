@@ -1,0 +1,25 @@
+{
+    "dataset_path": "datasets/conll2003_bioes_partial",
+    "save_model_path": "tmp/fuzzy_crf_result",
+    "model": {
+        "type": "fuzzy_crf",
+        "embedding": {
+            "word_embedding": {
+                "type": "Glove",
+                "dim": 100
+            },
+            "char_embedding": {
+                "hidden_dim": 50,
+                "dim": 25
+            },
+            "hidden_dim": 200
+        },
+        "dropout_rate": 0.5
+    },
+    "train": {
+        "learning_rate": 0.01,
+        "epochs": 100,
+        "batch_size": 10
+    },
+    "device": "GPU"
+}

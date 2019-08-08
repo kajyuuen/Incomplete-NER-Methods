@@ -1,0 +1,27 @@
+{
+    "dataset_path": "datasets/dict_conll2003_bioes",
+    "save_model_path": "tmp/dictionary/hard_result",
+    "model": {
+        "type": "hard_crf",
+        "embedding": {
+            "word_embedding": {
+                "type": "Glove",
+                "dim": 100
+            },
+            "char_embedding": {
+                "hidden_dim": 50,
+                "dim": 25
+            },
+            "hidden_dim": 200
+        },
+        "dropout_rate": 0.5
+    },
+    "train": {
+        "clipping": 5,
+        "learning_rate": 0.01,
+        "epochs": 10,
+        "sub_num_epochs": 30,
+        "batch_size": 1
+    },
+    "device": "GPU"
+}
