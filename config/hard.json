@@ -1,6 +1,6 @@
 {
     "dataset_path": "datasets/conll2003_bioes_remove_O",
-    "save_model_path": "tmp/0805_hard_crf_result",
+    "save_model_path": "tmp/0808_hard_crf_result",
     "model": {
         "type": "hard_crf",
         "embedding": {
@@ -17,7 +17,6 @@
         "dropout_rate": 0.5
     },
     "train": {
-        "clipping": 5,
         "learning_rate": 0.01,
         "epochs": 10,
         "sub_num_epochs": 30,

@@ -77,7 +77,7 @@ class HardTrainer():
         epoch_valid_loss = 0
         valid_count = 0
 
-        progress_iter = tqdm(valid_iter, leave=False)
+        progress_iter = tqdm(valid_iter, leave=True)
         for batch in progress_iter:
             loss = model.neg_log_likelihood(batch)
 
@@ -99,7 +99,7 @@ class HardTrainer():
             epoch_loss = 0
             count = 0
 
-            progress_iter = tqdm(dataset_iter, leave=False)
+            progress_iter = tqdm(dataset_iter, leave=True)
 
             for batch in progress_iter:
                 optimizer.zero_grad()
@@ -107,7 +107,7 @@ class HardTrainer():
                 loss.backward()
 
                 if self.clipping is not None:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), self.clipping)j
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), self.clipping)
 
                 optimizer.step()
 
