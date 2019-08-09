@@ -1,5 +1,5 @@
 {
-    "dataset_path": "datasets/conll2003_bioes_remove_O",
+    "dataset_path": "datasets/dict_conll2003_bioes",
     "save_model_path": "tmp/0808_hard_crf_result",
     "model": {
         "type": "hard_crf",
@@ -17,7 +17,7 @@
         "dropout_rate": 0.5
     },
     "train": {
-        "learning_rate": 0.01,
+        "learning_rate": 0.05,
         "epochs": 10,
         "sub_num_epochs": 30,
         "batch_size": 1

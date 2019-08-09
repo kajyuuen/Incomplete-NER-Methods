@@ -21,17 +21,18 @@ class HardTrainer():
     def __init__(self,
                  model,
                  train_iter,
-                 valid_iter = None,
-                 test_iter = None,
+                 valid_iter,
+                 test_iter,
                  label_dict = None,
                  sub_num_epochs = 2,
                  learning_rate = 0.05,
-                 weight_decay = 1e-8,
+                 weight_decay = 0,
                  clipping = None,
                  save_path = None,
                  force_save = False,
                  train_only = False,
                  early_stopping = None,
+                 eval_freq = 2000,
                  device = "CPU"
                  ):
     
@@ -49,6 +50,7 @@ class HardTrainer():
         self.save_path = save_path
         self.init_model_path = save_path + "/init_model"
         self.clipping = clipping
+        self.eval_freq = eval_freq
         self.train_only = train_only
 
         if self.save_path:
@@ -63,7 +65,7 @@ class HardTrainer():
             dataset_iter[i][3] = torch.LongTensor(predict_tags).to(self.device)
         return dataset_iter
 
-    def _simple_f1_score(self, model, iter):
+    def _simple_score(self, model, iter):
         model.eval()
         y_true, y_pred = [], []
         for batch in iter:
@@ -94,15 +96,15 @@ class HardTrainer():
 
     def _simple_train(self, model, dataset_iter, valid_iter, num_epochs, description, save_path, early_stopping=None, init_train=False):
         best_iteration, best_f1 = 0, 0
+        best_valid_score = [0] * 3
         optimizer = optim.Adam(model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
 
         for ind in range(num_epochs):
-            model.train()
             epoch_loss = 0
             count = 0
 
             progress_iter = tqdm(dataset_iter, leave=True)
-
+            model.train()
             for batch in progress_iter:
                 optimizer.zero_grad()
                 loss = model.neg_log_likelihood(batch, init_train=init_train)
@@ -121,28 +123,25 @@ class HardTrainer():
                 progress_iter.set_description('{}'.format(description))
                 progress_iter.set_postfix(loss=(loss))
 
-            # Save
-            os.makedirs(save_path, exist_ok = True)
-            path = save_path + "/epoch_{}".format(ind+1)
-            torch.save(model.state_dict(), path)
+                if count != 0 and (count % self.eval_freq == 0 or count == len(progress_iter)):
+                    os.makedirs(save_path, exist_ok = True)
 
-            if valid_iter is None:
-                continue
+                    # Valid
+                    valid_precision, valid_recall, valid_f1 = self._simple_score(model, valid_iter)
 
-            # Valid
-            valid_precision, valid_recall, valid_f1 = self._simple_f1_score(model, valid_iter)
+                    with open(save_path + "/valid_score.txt", "a") as f:
+                        f.write("[{}] Precision: {}, Recall: {}, F1: {}\n".format(ind+1, valid_precision, valid_recall, valid_f1))
 
-            if valid_f1 >= best_f1:
-                best_f1 = valid_f1
-                best_iteration = ind+1
+                    if valid_f1 >= best_f1:
+                        best_f1 = valid_f1
+                        best_iteration = ind+1
+                        best_valid_score = valid_precision, valid_recall, valid_f1
 
-            with open(save_path + "/best_epoch.txt", "w") as f:
-                f.write(str(best_iteration))
+                        # Save
+                        path = save_path + "/best_model"
+                        torch.save(model.state_dict(), path)
 
-            valid_loss = self._simple_valid(model, valid_iter)
-
-            with open(save_path + "/valid_score.txt", "a") as f:
-                f.write("[{}] loss: {}, Precision: {}, Recall: {}, F1: {}\n".format(ind+1, valid_loss, valid_precision, valid_recall, valid_f1))
+                    model.train()
 
             # Early stopping
             if early_stopping is None:
@@ -151,7 +150,7 @@ class HardTrainer():
                 logger.info("Best Epoch: {}".format(best_iteration))
                 break
 
-        return loss, valid_loss
+        return best_valid_score
 
     def _load_model(self, path):
         model = copy.deepcopy(self.init_model)
@@ -160,15 +159,12 @@ class HardTrainer():
 
     def _load_best_model(self, k, iteration):
         path = self.save_path + "/k_{}/iteration_{}".format(k, iteration)
-
-        with open(path + "/best_epoch.txt", "r") as f:
-            best_epoch = f.read()
-        best_model_path = path + "/epoch_{}".format(best_epoch)
-
+        best_model_path = path + "/best_model"
         return self._load_model(best_model_path)
 
 
     def train(self, num_epochs, early_stopping=None, save=True):
+        # Init train
         for i in range(2)[::-1]:
             model = copy.deepcopy(self.init_model)
             self._simple_train(model, self.split_train_iters[i], self.valid_iter, self.sub_num_epochs, "Init Train", self.save_path + "/k_{}/iteration_{}".format(i, 0), init_train=True)
@@ -190,8 +186,8 @@ class HardTrainer():
             if True:
                 # Final Train
                 model = copy.deepcopy(self.init_model)
-                loss, valid_loss = self._simple_train(model, self.train_iter, self.valid_iter, self.sub_num_epochs, "Final Train", self.save_path + "/final", early_stopping=5)
-                loss_text = "Train: {}, Valid: {}".format(loss, valid_loss)
+                best_valid_score = self._simple_train(model, self.train_iter, self.valid_iter, self.sub_num_epochs, "Final Train", self.save_path + "/final", early_stopping=5)
+                loss_text = "[Best Valid] Precision: {}, Recall: {}, F1:{}".format(best_valid_score[0], best_valid_score[1], best_valid_score[2])
 
                 # Test
                 model.eval()
@@ -208,8 +204,8 @@ class HardTrainer():
 
         # Final Train
         model = copy.deepcopy(self.init_model)
-        loss, valid_loss = self._simple_train(model, self.train_iter, self.valid_iter, self.sub_num_epochs, "Final Train", self.save_path + "/final", early_stopping=5)
-        loss_text = "Train: {}, Valid: {}".format(loss, valid_loss)
+        best_valid_score = self._simple_train(model, self.train_iter, self.valid_iter, self.sub_num_epochs, "Final Train", self.save_path + "/final", early_stopping=5)
+        loss_text = "[Best Valid] Precision: {}, Recall: {}, F1:{}".format(best_valid_score[0], best_valid_score[1], best_valid_score[2])
 
         # Test
         model.eval()
