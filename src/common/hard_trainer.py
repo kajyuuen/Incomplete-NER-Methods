@@ -8,6 +8,8 @@ from torch.nn.utils.rnn import pad_sequence
 from tqdm import tqdm
 from seqeval.metrics import classification_report
 from seqeval.metrics import f1_score
+from seqeval.metrics import accuracy_score
+from seqeval.metrics import recall_score
 from sklearn.model_selection import train_test_split
 
 from src.common.convert import convert
@@ -23,7 +25,7 @@ class HardTrainer():
                  test_iter = None,
                  label_dict = None,
                  sub_num_epochs = 2,
-                 learning_rate = 0.01,
+                 learning_rate = 0.05,
                  weight_decay = 1e-8,
                  clipping = None,
                  save_path = None,
@@ -69,7 +71,7 @@ class HardTrainer():
             _, _, _, label_seq_tensor = batch
             y_true.extend(convert(label_seq_tensor.tolist(), self.label_dict))
             y_pred.extend(convert(predict_tags, self.label_dict))
-        return f1_score(y_true, y_pred)
+        return accuracy_score(y_true, y_pred), recall_score(y_true, y_pred), f1_score(y_true, y_pred)
 
     def _simple_valid(self, model, valid_iter):
         model.eval()
@@ -128,7 +130,7 @@ class HardTrainer():
                 continue
 
             # Valid
-            valid_f1 = self._simple_f1_score(model, valid_iter)
+            valid_precision, valid_recall, valid_f1 = self._simple_f1_score(model, valid_iter)
 
             if valid_f1 >= best_f1:
                 best_f1 = valid_f1
@@ -139,8 +141,8 @@ class HardTrainer():
 
             valid_loss = self._simple_valid(model, valid_iter)
 
-            with open(save_path + "/valid_f1_score.txt", "a") as f:
-                f.write("[{}] valid loss: {}, valid f1: {}\n".format(ind+1, valid_loss, valid_f1))
+            with open(save_path + "/valid_score.txt", "a") as f:
+                f.write("[{}] loss: {}, Precision: {}, Recall: {}, F1: {}\n".format(ind+1, valid_loss, valid_precision, valid_recall, valid_f1))
 
             # Early stopping
             if early_stopping is None:
