@@ -47,6 +47,12 @@ $ python main.py config/lample.json
 $ python main.py config/fuzzy_lample.json
 ```
 
+### Hard Approach
+
+```
+$ python main.py config/hard.json
+```
+
 ## References
 
 - https://github.com/kmkurn/pytorch-crf
