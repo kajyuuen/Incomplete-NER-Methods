@@ -30,7 +30,6 @@ class BiLSTM_CRF(nn.Module):
                  inference = "CRF",
                  device = "cpu"):
         super().__init__()
-        self.device = device
         self.encoder = BiLSTM(num_tags,
                               label2idx,
                               idx2labels,

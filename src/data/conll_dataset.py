@@ -1,5 +1,6 @@
 from src.data.conll_loader import Conll2003Reader
 from src.common.config import PAD_TAG, UNK_TAG, UNLABELED_TAG
+from src.common.config import PAD_ID, UNK_ID, UNLABELED_ID
 
 import torch
 import numpy as np
@@ -88,15 +89,15 @@ class Conll2003Dataset:
 
     def _build_word_idx(self):
         word2idx, idx2word = {}, []
-        word2idx[PAD_TAG] = 0
+        word2idx[PAD_TAG] = PAD_ID
         idx2word.append(PAD_TAG)
-        word2idx[UNK_TAG] = 1
+        word2idx[UNK_TAG] = UNK_ID
         idx2word.append(UNK_TAG)
 
         char2idx, idx2char = {}, []
-        char2idx[PAD_TAG] = 0
+        char2idx[PAD_TAG] = PAD_ID
         idx2char.append(PAD_TAG)
-        char2idx[UNK_TAG] = 1
+        char2idx[UNK_TAG] = UNK_ID
         idx2char.append(UNK_TAG)
 
         for instance in self.train_instances + self.valid_instances + self.test_instances:
