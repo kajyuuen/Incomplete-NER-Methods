@@ -6,6 +6,15 @@ import numpy as np
 
 from tqdm import tqdm
 
+def possible_tag_masks(num_tags, tags, unlabeled_index):
+    no_annotation_idx = (tags == unlabeled_index)
+    tags[tags == unlabeled_index] = 0
+
+    tags_ = torch.unsqueeze(tags, 2)
+    masks = torch.zeros(tags_.size(0), tags_.size(1), num_tags)
+    masks.scatter_(2, tags_, 1)
+    masks[no_annotation_idx] = 1
+    return masks
 
 class Conll2003Dataset:
     def __init__(self, 

@@ -39,6 +39,7 @@ class BiLSTM_Fuzzy_CRF(nn.Module):
         self.idx2labels = idx2labels
         self.PAD_INDEX = label2idx[PAD_TAG]
         self.UNLABELED_INDEX = label2idx[UNLABELED_TAG]
+        print(self.UNLABELED_INDEX)
         self.device = device
         print("BiLSTM_Fuzzy_CRF")
         # Char embedding encoder
