@@ -74,11 +74,8 @@ class BiLSTM(nn.Module):
         mask = (tags != self.PAD_INDEX)
 
         # Convert embedding to feature
-        packed_word_char_emb = pack_padded_sequence(sorted_seq_tensor, sorted_seq_len, True)
-        lstm_out, _ = self.lstm(packed_word_char_emb)
-        lstm_out, _ = pad_packed_sequence(lstm_out, batch_first=True)
+        lstm_out, _ = self.lstm(inputs_word_char_emb)
         lstm_out = self.drop_layer(lstm_out)
-
         feats = self.hidden2tag(lstm_out)
 
         return feats, tags, mask

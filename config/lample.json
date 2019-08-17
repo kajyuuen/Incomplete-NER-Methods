@@ -1,6 +1,6 @@
 {
     "dataset_path": "datasets/conll2003_bioes",
-    "save_model_path": "tmp/crf_result",
+    "save_model_path": "tmp/crf_result_new",
     "seed": 20,
     "model": {
         "type": "crf",

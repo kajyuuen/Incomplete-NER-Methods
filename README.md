@@ -17,19 +17,19 @@ Unlabeled token's tag is `NOANNOTATION`.
 ### Delete label
 
 ```
-$ python delete_annotation.py conll2003_bioes/eng.train tmp.train --entity_keep_ratio 0.4
+$ python src/labeling/delete_annotation.py conll2003_bioes/eng.train tmp.train --entity_keep_ratio 0.4
 ```
 
 ## Create Dictionary
 
 ```
-$ python dict_create.py datasets/dict_conll2003_bioes/eng.testa datasets/dict_conll2003_bioes/testa.dic
+$ python src/labeling/dict_create.py datasets/dict_conll2003_bioes/eng.testa datasets/dict_conll2003_bioes/testa.dic
 ```
 
 ## Annotation using Dictionary
 
 ```
-$ python dict_labeling.py datasets/dict_conll2003_bioes/testa.dic datasets/dict_conll2003_bioes/eng.train
+$ python src/labeling/dict_labeling.py datasets/dict_conll2003_bioes/testa.dic datasets/dict_conll2003_bioes/eng.train
 ```
 
 ## Train and Predict

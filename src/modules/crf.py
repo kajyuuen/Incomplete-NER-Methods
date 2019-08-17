@@ -38,7 +38,6 @@ class CRF(nn.Module):
     def forward(self, feats, tags, mask):
         gold_score = self._score_sentence(feats, tags, mask)
         forward_score = self._forward_alg(feats, mask)
-        score = forward_score - gold_score
         return torch.sum(forward_score - gold_score)
 
     def _forward_alg(self, feats, mask):
