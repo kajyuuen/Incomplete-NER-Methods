@@ -1,6 +1,6 @@
 {
     "dataset_path": "datasets/conll2003_bioes_partial",
-    "save_model_path": "tmp/fuzzy_crf_result",
+    "save_model_path": "tmp/fuzzy_crf_result_old",
     "model": {
         "type": "fuzzy_crf",
         "embedding": {
