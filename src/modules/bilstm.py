@@ -51,7 +51,7 @@ class BiLSTM(nn.Module):
         self.hidden2tag = nn.Linear(self.hidden_dim, self.num_tags)
 
     def forward(self, batch):
-        word_seq_tensor, word_seq_len, char_seq_tensor, char_seq_len, label_seq_tensor = batch
+        word_seq_tensor, word_seq_len, char_seq_tensor, char_seq_len, label_seq_tensor, possible_tags = batch
         batch_size, sequence_length = word_seq_tensor.size()
 
         # Get embedding
@@ -78,4 +78,4 @@ class BiLSTM(nn.Module):
         lstm_out = self.drop_layer(lstm_out)
         feats = self.hidden2tag(lstm_out)
 
-        return feats, tags, mask
+        return feats, tags, mask, possible_tags

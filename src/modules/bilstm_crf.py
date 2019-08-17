@@ -55,10 +55,10 @@ class BiLSTM_CRF(nn.Module):
 
     
     def forward(self, batch):
-        feats, tags, mask = self.encoder(batch)
-        score = self.inferencer(feats, tags, mask)
+        feats, tags, mask, possible_tags = self.encoder(batch)
+        score = self.inferencer(feats, tags, mask, possible_tags)
         return score
 
     def decode(self, batch):
-        feats, _, mask = self.encoder(batch)
+        feats, _, mask, _ = self.encoder(batch)
         return self.inferencer._viterbi_tags(feats, mask)

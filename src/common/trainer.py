@@ -122,7 +122,7 @@ class Trainer():
                 y_true, y_pred = [], []
                 for batch in self.test_iter:
                     predict_tags = self.model.decode(batch)
-                    _, _, _, _, label_seq_tensor = batch
+                    _, _, _, _, label_seq_tensor, _ = batch
                     y_true.extend(convert(label_seq_tensor.tolist(), self.label_dict))
                     y_pred.extend(convert(predict_tags, self.label_dict))
                 with open(self.save_path + "/result.txt", "a") as f:

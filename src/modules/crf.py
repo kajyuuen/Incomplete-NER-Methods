@@ -35,7 +35,7 @@ class CRF(nn.Module):
         torch.nn.init.normal_(self.start_transitions)
         torch.nn.init.normal_(self.end_transitions)
 
-    def forward(self, feats, tags, mask):
+    def forward(self, feats, tags, mask, _):
         gold_score = self._score_sentence(feats, tags, mask)
         forward_score = self._forward_alg(feats, mask)
         return torch.sum(forward_score - gold_score)
