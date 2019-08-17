@@ -181,4 +181,4 @@ class Conll2003Dataset:
         word_seq_len = word_seq_len.to(self.device)
         char_seq_len = char_seq_len.to(self.device)
 
-        return [word_seq_tensor, char_seq_tensor, char_seq_len, label_seq_tensor]
+        return [word_seq_tensor, word_seq_len, char_seq_tensor, char_seq_len, label_seq_tensor]

@@ -21,8 +21,7 @@ class CharBiLSTM(nn.Module):
         self.device = device
         self.hidden = hidden_dim
         self.dropout = nn.Dropout(dropout).to(self.device)
-        self.char_embeddings = nn.Embedding(self.char_size, self.char_emb_size)
-        self.char_embeddings = self.char_embeddings.to(self.device)
+        self.char_embeddings = nn.Embedding(self.char_size, self.char_emb_size).to(self.device)
 
         self.char_lstm = nn.LSTM(self.char_emb_size,
                                 self.hidden // 2 ,
@@ -30,6 +29,9 @@ class CharBiLSTM(nn.Module):
                                 batch_first=True,
                                 bidirectional=True).to(self.device)
 
+    def forward(self, char_input, seq_lengths):
+        return self.get_last_hiddens(char_input, seq_lengths)
+                            
     def get_last_hiddens(self, char_seq_tensor, char_seq_len):
         """
             input:
@@ -41,9 +43,9 @@ class CharBiLSTM(nn.Module):
         batch_size, sent_len, _ = char_seq_tensor.size()
         char_seq_tensor = char_seq_tensor.view(batch_size * sent_len, -1)
         char_seq_len = char_seq_len.view(batch_size * sent_len)
-        sorted_seq_len, permIdx = char_seq_len.sort(0, descending=True)
-        _, recover_idx = permIdx.sort(0, descending=False)
-        sorted_seq_tensor = char_seq_tensor[permIdx]
+        sorted_seq_len, perm_idx = char_seq_len.sort(0, descending=True)
+        _, recover_idx = perm_idx.sort(0, descending=False)
+        sorted_seq_tensor = char_seq_tensor[perm_idx]
 
         char_embeds = self.dropout(self.char_embeddings(sorted_seq_tensor))
         pack_input = pack_padded_sequence(char_embeds, sorted_seq_len, batch_first=True)
@@ -51,8 +53,4 @@ class CharBiLSTM(nn.Module):
         _, char_hidden = self.char_lstm(pack_input, None)
         hidden = char_hidden[0].transpose(1,0).contiguous().view(batch_size * sent_len, 1, -1)
         return hidden[recover_idx].view(batch_size, sent_len, -1)
-
-    def forward(self, char_input, seq_lengths):
-        return self.get_last_hiddens(char_input, seq_lengths)
-
 
