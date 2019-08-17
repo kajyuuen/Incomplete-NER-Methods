@@ -7,17 +7,6 @@ from src.utils.math_utils import log_sum_exp
 from src.utils.math_utils import argmax
 from src.common.config import PAD_TAG, UNK_TAG, UNLABELED_TAG
 
-import copy
-def possible_tag_masks(num_tags, tags, unlabeled_index, device = "cpu"):
-    no_annotation_idx = (tags == unlabeled_index)
-    tags[tags == unlabeled_index] = 0
-
-    tags_ = torch.unsqueeze(tags, 2)
-    masks = torch.zeros(tags_.size(0), tags_.size(1), num_tags, device=device)
-    masks.scatter_(2, tags_, 1)
-    masks[no_annotation_idx] = 1
-    return masks
-
 class FuzzyCRF(nn.Module):
     def __init__(self,
                  num_tags,
@@ -31,7 +20,6 @@ class FuzzyCRF(nn.Module):
         self.UNLABELED_INDEX = label2idx[UNLABELED_TAG]
         self.device = device
 
-        print("FuzzyCRF")
         init_transition = torch.randn(self.num_tags, self.num_tags)
         init_transition[:, self.PAD_INDEX] = -10000.0
         init_transition[self.PAD_INDEX, :] = -10000.0
@@ -85,7 +73,7 @@ class FuzzyCRF(nn.Module):
         # Sum (log-sum-exp) over all possible tags
         return log_sum_exp(stops) # (batch_size,)
 
-    def _score_sentence(self, feats, tags, mask, _):
+    def _score_sentence(self, feats, tags, mask, possible_tags):
         """
         Parameters:
             feats: (batch_size, sequence_length, num_tags)
@@ -98,10 +86,8 @@ class FuzzyCRF(nn.Module):
         batch_size, sequence_length, num_tags = feats.data.shape
 
         feats = feats.transpose(0, 1).contiguous()
-        _tags = copy.deepcopy(tags).contiguous()
         mask = mask.float().transpose(0, 1).contiguous()
-
-        possible_tags = possible_tag_masks(self.num_tags, _tags, self.UNLABELED_INDEX, self.device).float().transpose(0, 1) # (sequence_length, batch_size, num_tags)
+        possible_tags = possible_tags.float().transpose(0, 1)
 
         # Start transition score and first emission
         first_possible_tag = possible_tags[0]
