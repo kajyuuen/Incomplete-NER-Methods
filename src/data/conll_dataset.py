@@ -1,11 +1,22 @@
+import copy
+
 from src.data.conll_loader import Conll2003Reader
-from src.common.config import PAD_TAG, UNK_TAG, UNLABELED_TAG
+from src.common.config import PAD_TAG, UNK_TAG, UNLABELED_TAG, UNLABELED_ID
 
 import torch
 import numpy as np
 
 from tqdm import tqdm
 
+def possible_tag_masks(num_tags, tags, unlabeled_index):
+    no_annotation_idx = (tags == unlabeled_index)
+    tags[tags == unlabeled_index] = 0
+
+    tags_ = torch.unsqueeze(tags, 2)
+    masks = torch.zeros(tags_.size(0), tags_.size(1), num_tags)
+    masks.scatter_(2, tags_, 1)
+    masks[no_annotation_idx] = 1
+    return masks
 
 class Conll2003Dataset:
     def __init__(self, 
@@ -175,10 +186,13 @@ class Conll2003Dataset:
             for word_idx in range(word_seq_len[idx], max_seq_len):
                 char_seq_tensor[idx, word_idx, 0: 1] = torch.LongTensor([self.char2idx[PAD_TAG]])
 
+        _tags = copy.deepcopy(label_seq_tensor).contiguous()
+        possible_tags = possible_tag_masks(self.num_tags, _tags, UNLABELED_ID).to(self.device)
+
         word_seq_tensor = word_seq_tensor.to(self.device)
         label_seq_tensor = label_seq_tensor.to(self.device)
         char_seq_tensor = char_seq_tensor.to(self.device)
         word_seq_len = word_seq_len.to(self.device)
         char_seq_len = char_seq_len.to(self.device)
-
-        return [word_seq_tensor, char_seq_tensor, char_seq_len, label_seq_tensor]
+        
+        return [word_seq_tensor, word_seq_len, char_seq_tensor, char_seq_len, label_seq_tensor, possible_tags]

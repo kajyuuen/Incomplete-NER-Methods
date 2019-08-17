@@ -7,16 +7,6 @@ from src.utils.math_utils import log_sum_exp
 from src.utils.math_utils import argmax
 from src.common.config import PAD_TAG, UNK_TAG, UNLABELED_TAG
 
-def possible_tag_masks(num_tags, tags, unlabeled_index, device = "cpu"):
-    no_annotation_idx = (tags == unlabeled_index)
-    tags[tags == unlabeled_index] = 0
-
-    tags_ = torch.unsqueeze(tags, 2)
-    masks = torch.zeros(tags_.size(0), tags_.size(1), num_tags, device=device)
-    masks.scatter_(2, tags_, 1)
-    masks[no_annotation_idx] = 1
-    return masks
-
 class BiLSTM_Hard_CRF(nn.Module):
     def __init__(self,
                  num_tags,

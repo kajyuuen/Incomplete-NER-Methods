@@ -60,7 +60,7 @@ class Trainer():
 
             for batch in progress_iter:
                 self.optimizer.zero_grad()
-                loss = self.model.neg_log_likelihood(batch)
+                loss = self.model(batch)
                 loss.backward()
 
                 if self.clipping is not None:
@@ -95,7 +95,7 @@ class Trainer():
                 progress_iter = tqdm(self.valid_iter, leave=False)
 
                 for batch in progress_iter:
-                    loss = self.model.neg_log_likelihood(batch)
+                    loss = self.model(batch)
 
                     epoch_valid_loss += loss.item()
                     valid_count += 1
@@ -121,8 +121,8 @@ class Trainer():
             if self.test_flag:
                 y_true, y_pred = [], []
                 for batch in self.test_iter:
-                    predict_tags = self.model(batch)
-                    _, _, _, label_seq_tensor = batch
+                    predict_tags = self.model.decode(batch)
+                    _, _, _, _, label_seq_tensor, _ = batch
                     y_true.extend(convert(label_seq_tensor.tolist(), self.label_dict))
                     y_pred.extend(convert(predict_tags, self.label_dict))
                 with open(self.save_path + "/result.txt", "a") as f:
